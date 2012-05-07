@@ -169,7 +169,8 @@ describe "Model attachments" do
   
     it 'should return a Hash with all attachments' do
       @file.rewind
-      @obj.attachments.should == { @attachment_name =>{ "data" => "PCFET0NUWVBFIGh0bWw+CjxodG1sPgogIDxoZWFkPgogICAgPHRpdGxlPlRlc3Q8L3RpdGxlPgogIDwvaGVhZD4KICA8Ym9keT4KICAgIDxwPgogICAgICBUZXN0CiAgICA8L3A+CiAgPC9ib2R5Pgo8L2h0bWw+Cg==", "content_type" => "text/html"}}
+      b64_file_contents = Base64.encode64( @file.read ).split("\n").join
+      @obj.attachments.should == { @attachment_name =>{ "data" => b64_file_contents, "content_type" => "text/html"}}
     end
   
   end

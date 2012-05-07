@@ -100,6 +100,10 @@ module CouchRest
         new? ? nil : [id]
       end
 
+      def to_partial_path
+        @_to_partial_path ||= self.class.name.demodulize.underscore
+      end
+
       alias :to_param :id
       alias :new_record? :new?
       alias :new_document? :new?
