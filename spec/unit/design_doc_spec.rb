@@ -167,21 +167,24 @@ describe CouchRest::Model::DesignDoc do
         class_name = "#{example.metadata[:full_description].gsub(/\s+/,'_').camelize}Model"
         doc = CouchRest::Document.new("_id" => "_design/#{class_name}")
         doc["language"] = "javascript"
-        doc["views"] = {"all" => {"map" => 
-                                  "function(doc) {
-                                 if (doc['type'] == 'Article') {
-                                   emit(doc['_id'],1);
-                                 }
-                               }"},
-                         "by_name" => {"map" => 
-                                       "function(doc) {
-                                     if ((doc['type'] == '#{class_name}') && (doc['name'] != null)) {
-                                       emit(doc['name'], null);
-                                     }",
-                                      "reduce" => 
-                                      "function(keys, values, rereduce) {
-                                        return sum(values);
-                                      }"}}
+        doc["views"] = {
+          "all" => {"map" =>
+            "function(doc) {
+              if (doc['type'] == 'Article') {
+                emit(doc['_id'],1);
+              }
+            }"},
+            "by_name" => {"map" =>
+              "function(doc) {
+                if ((doc['type'] == 'special') && (doc['name'] != null)) {
+                  emit(doc['name'], null);
+                }}",
+              "reduce" =>
+                "function(keys, values, rereduce) {
+                  return sum(values);
+                }"
+            }
+        }
         
         DB.save_doc doc
 
@@ -193,15 +196,23 @@ describe CouchRest::Model::DesignDoc do
               view :by_name
             end
             property :name, String
+
+            def self.reload_design_doc
+              @design_doc = nil
+            end
           end
         KLASS
 
-        class_name.constantize
+        new_model = class_name.constantize
+
+        new_model.reload_design_doc
+        new_model
       }
 
       it "will not update stored design doc if view changed" do
         model_class.by_name
         orig = model_class.stored_design_doc
+        model_class.auto_update_design_doc.should == false
         design = model_class.design_doc
         view = design['views']['by_name']['map']
         design['views']['by_name']['map'] = view + '  '
